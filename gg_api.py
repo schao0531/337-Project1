@@ -1,6 +1,11 @@
 '''Version 0.2'''
 import pandas as pd
 import json
+import nltk
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('maxent_ne_chunker')
+nltk.download('words')
 from collections import Counter
 from nltk import ngrams
 from nltk.collocations import *
@@ -12,7 +17,7 @@ import pdb
 OFFICIAL_AWARDS = ['cecil b. demille award', 'best motion picture - drama', 'best performance by an actress in a motion picture - drama', 'best performance by an actor in a motion picture - drama', 'best motion picture - comedy or musical', 'best performance by an actress in a motion picture - comedy or musical', 'best performance by an actor in a motion picture - comedy or musical', 'best animated feature film', 'best foreign language film', 'best performance by an actress in a supporting role in a motion picture', 'best performance by an actor in a supporting role in a motion picture', 'best director - motion picture', 'best screenplay - motion picture', 'best original score - motion picture', 'best original song - motion picture', 'best television series - drama', 'best performance by an actress in a television series - drama', 'best performance by an actor in a television series - drama', 'best television series - comedy or musical', 'best performance by an actress in a television series - comedy or musical', 'best performance by an actor in a television series - comedy or musical', 'best mini-series or motion picture made for television', 'best performance by an actress in a mini-series or motion picture made for television', 'best performance by an actor in a mini-series or motion picture made for television', 'best performance by an actress in a supporting role in a series, mini-series or motion picture made for television', 'best performance by an actor in a supporting role in a series, mini-series or motion picture made for television']
 
 def award_dictionary():
-    
+
     stop_words = ['i',
                   'me',
                   'my',
@@ -155,8 +160,7 @@ def keyword_present(tweet,keywords):
     return False
 
 def award_tweets(table,award,keywords):
-    '''f'''
-    
+
     relevant_tweets = [tweet for tweet in table['text'] if keyword_present(tweet,keywords)]
     high_score = max([(sum([1 for word in award_dict[award] if word in tweet.lower()])) for tweet in win_tweets])
     win_candidates = [tweet for tweet in win_tweets if sum([1 for word in award_dict[award] if word in tweet.lower()]) == high_score]
@@ -187,8 +191,6 @@ def get_awards(year):
         #generalize to any award shows
     award_words = ['Motion', 'motion', 'Picture', 'picture', 'Drama', 'drama', 'Performance', 'performance', 'Actress', 'actress', 'Actor', 'actor','Comedy', 'comedy', 'Musical', 'musical', 'Animated', 'animated', 'Feature', 'feature', 'Film', 'film', 'Foreign', 'foreign', 'Language', 'language', 'Supporting', 'supporting', 'Role', 'role', 'Director', 'director', 'Screenplay', 'screenplay', 'Original', 'orginal', 'Score', 'score', 'Song', 'song', 'Television', 'television', 'Series', 'series', 'Mini-series',  'mini-series', 'mini', 'Mini']
     helper_regex = r"(Best(?=\s[A-Z])(?:\s([A-Z]\w+|in|a|by an|for|or|\s-\s))+)"
-    stop_words = ['the', 'The', 'a', 'A', 'for', 'For', 'in', 'In', 'by', 'By','an', 'An']
-
     #for rest of awards, dictionary from official award name to common name
 
     #awards_list = set()
@@ -197,10 +199,6 @@ def get_awards(year):
     if year == '2013':
         table = table2013
 
-#    elif year == '2015':
-#      table = table2015
-
-    #link common words together
     filtered_awards = table.loc[(table['text'].str.contains(helper_regex, regex=True))]['text']
 
     for t_id, text in filtered_awards.iteritems():
@@ -214,13 +212,10 @@ def get_awards(year):
         if (len(words) > 1) and (any(x in words for x in award_words)):
           awards_list.append(award_name)
 
-    #awards_list = list(awards_list)
-    #print(Counter(awards_list))
+
     most_common_awards = Counter(awards_list).most_common(15)
-    #awards = "\n".join(awards_list)
 
     awards = [x[0] for x in most_common_awards]
-    print(awards)
     return awards
 
 def get_nominees(year):
@@ -247,22 +242,47 @@ def get_winner(year):
             names = [bigram[0][0]+' '+bigram[0][1] for bigram in top_bigrams if bigram[0][0][0].isupper() and bigram[0][1][0].isupper()] #Filter out bigrams that aren't both capitalized
             print(award)
             print(names)
-    
+
     return winners
 
 def get_presenters(year):
-    '''Presenters is a dictionary with the hard coded award
-    names as keys, and each entry a list of strings. Do NOT change the
-    name of this function or what it returns.'''
-    # Your code here
+    pre_ceremony()
+    presenter_keywords = ["will be presenting", "will present", "presenting", "to present", "presents", "present"]
+    presenters = []
+    if year == '2013':
+        table = table2013
+    #print(award_dict)
+    for award in award_dict:
+        filtered_tweets = award_tweets(table,award,presenter_keywords)
+        #print(award)
+        #print(filtered_tweets)
+        presenter_tweets = " ".join(filtered_tweets)
+        presenter_tweets = re.sub(r'\b%s\b' % 'GoldenGlobes|Golden Globes|Motion|Picture|Performance|Best', '', presenter_tweets)
+        extracted_names = extract_people(presenter_tweets)
+        presenter_names_ngrams_counter = Counter(extracted_names)
+        top_bigrams = presenter_names_ngrams_counter.most_common(2)
+        presenter_names = [b[0] for b in top_bigrams]
+        #print(presenter_names)
+        presenters.append(presenter_names)
     return presenters
 
+
+#https://tim.mcnamara.nz/post/2650550090/extracting-names-with-6-lines-of-python-code
+def extract_people(text):
+    names = []
+    for sent in nltk.sent_tokenize(text):
+        for chunk in nltk.ne_chunk(nltk.pos_tag(nltk.word_tokenize(sent))):
+            if hasattr(chunk, 'label') and chunk.label() == "PERSON":
+                name = ' '.join(c[0] for c in chunk.leaves())
+                #print(chunk.label(), name)
+                names.append(name)
+    return names
 def pre_ceremony():
     '''This function loads/fetches/processes any data your program
         will use, and stores that data in your DB or in a json, csv, or
         plain text file. It is the first thing the TA will run when grading.
         Do NOT change the name of this function or what it returns.'''
-    
+
     # Your code here
     with open('gg2013.json') as f:
         data = json.load(f)
@@ -279,11 +299,11 @@ def pre_ceremony():
         timestamp.append(row['timestamp_ms'])
         user_id.append(row['user']['id'])
         screen_name.append(row['user']['screen_name'])
-    
+
     global table2013
     table2013 = pd.DataFrame({'text':text,'timestamp':timestamp,'user_id':user_id,'user_screen_name':screen_name},index=Id)
     table2013.index.rename('id',inplace=True)
-    
+
     global award_dict
     award_dict = award_dictionary()
 
@@ -295,14 +315,14 @@ def pre_ceremony():
     timestamp = []
     user_id = []
     screen_name = []
-    
+
     for row in data:
     Id.append(row['id'])
     text.append(row['text'])
     timestamp.append(row['timestamp_ms'])
     user_id.append(row['user']['id'])
     screen_name.append(row['user']['screen_name'])
-    
+
     global table2015
     table2015 = pd.DataFrame({'text':text,'timestamp':timestamp,'user_id':user_id,'user_screen_name':screen_name},index=Id)
     table2015.index.rename('id',inplace=True)
