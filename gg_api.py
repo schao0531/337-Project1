@@ -155,7 +155,7 @@ def award_dictionary():
 
 def keyword_present(tweet,keywords):
     for keyword in keywords:
-        if keyword in tweet:
+        if keyword.lower() in tweet.lower():
             return True
     return False
 
@@ -191,9 +191,7 @@ def get_awards(year):
         #generalize to any award shows
     award_words = ['Motion', 'motion', 'Picture', 'picture', 'Drama', 'drama', 'Performance', 'performance', 'Actress', 'actress', 'Actor', 'actor','Comedy', 'comedy', 'Musical', 'musical', 'Animated', 'animated', 'Feature', 'feature', 'Film', 'film', 'Foreign', 'foreign', 'Language', 'language', 'Supporting', 'supporting', 'Role', 'role', 'Director', 'director', 'Screenplay', 'screenplay', 'Original', 'orginal', 'Score', 'score', 'Song', 'song', 'Television', 'television', 'Series', 'series', 'Mini-series',  'mini-series', 'mini', 'Mini']
     helper_regex = r"(Best(?=\s[A-Z])(?:\s([A-Z]\w+|in|a|by an|for|or|\s-\s))+)"
-    #for rest of awards, dictionary from official award name to common name
 
-    #awards_list = set()
     awards_list = []
 
     if year == '2013':
@@ -211,7 +209,6 @@ def get_awards(year):
         words = award_name.split()
         if (len(words) > 1) and (any(x in words for x in award_words)):
           awards_list.append(award_name)
-
 
     most_common_awards = Counter(awards_list).most_common(15)
 
@@ -247,7 +244,7 @@ def get_winner(year):
 
 def get_presenters(year):
     pre_ceremony()
-    presenter_keywords = ["will be presenting", "will present", "presenting", "to present", "presents", "present"]
+    presenter_keywords = ["present"]
     presenters = []
     if year == '2013':
         table = table2013
@@ -266,6 +263,57 @@ def get_presenters(year):
         presenters.append(presenter_names)
     return presenters
 
+def get_redcarpet(year):
+    pre_ceremony()
+
+    if year == '2013':
+        table = table2013
+
+    filtered_tweets = table.loc[(table['text'].str.contains("redcarpet|red carpet|Red Carpet", regex=True))]['text']
+    #     for id, t in filtered_tweets.iteritems():
+    #       print(t)
+    string = " ".join(filtered_tweets)
+    string = re.sub(r'\b%s\b' % 'Golden Globes|carpet|Carpet|red|Red|redcarpet', '', string)
+    #print(string)
+    most_discussed = extract_people(string)
+    best_ngram_counts = Counter(most_discussed).most_common(5)
+    most_discussed = [x[0] for x in best_ngram_counts]
+    return most_discussed
+
+def get_best_dressed(year):
+    pre_ceremony()
+
+    if year == '2013':
+        table = table2013
+
+    filtered_best_dress = table.loc[(table['text'].str.contains("bestdressed|best dressed|Best Dressed", regex=True))]['text']
+
+    best_dress_tweets = " ".join(filtered_best_dress) #merge to one string
+    best_dress_tweets = re.sub(r'\b%s\b' % 'Golden Globes|Best Dressed|Photo|Photos|Best|Dress|Fashion', '', best_dress_tweets)
+    best_names = extract_people(best_dress_tweets)
+    #print(best_names)
+
+    best_ngram_counts = Counter(best_names)
+    top_best_bigrams = best_ngram_counts.most_common(5) #Find top 5
+    best_dressed_names = [bigram[0] for bigram in top_best_bigrams]
+    return best_dressed_names
+
+def get_worst_dressed(year):
+    pre_ceremony()
+
+    if year == '2013':
+        table = table2013
+
+    filtered_worst_dress = table.loc[(table['text'].str.contains("worstdressed|worst dressed|Worst Dressed", regex=True))]['text']
+    worst_dress_tweets = " ".join(filtered_worst_dress) #merge to one string
+    worst_dress_tweets = re.sub(r'\b%s\b' % 'Golden Globes|Worst Dressed|Photo|Photos|Worst|Dress|Fashion', '', worst_dress_tweets)
+    worst_names = extract_people(worst_dress_tweets)
+
+    worst_ngram_counts = Counter(worst_names) #Create list of bigrams
+    top_worst_bigrams = worst_ngram_counts.most_common(5) #Find top 5
+    worst_dressed_names = [bigram[0] for bigram in top_worst_bigrams]
+
+    return worst_dressed_names
 
 #https://tim.mcnamara.nz/post/2650550090/extracting-names-with-6-lines-of-python-code
 def extract_people(text):
@@ -277,6 +325,7 @@ def extract_people(text):
                 #print(chunk.label(), name)
                 names.append(name)
     return names
+    
 def pre_ceremony():
     '''This function loads/fetches/processes any data your program
         will use, and stores that data in your DB or in a json, csv, or
