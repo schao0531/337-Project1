@@ -248,17 +248,25 @@ def get_winner(year):
 def get_presenters(year):
     pre_ceremony()
     presenter_keywords = ["will be presenting", "will present", "presenting", "to present", "presents", "present"]
-
+    presenters = []
     if year == '2013':
         table = table2013
+    #print(award_dict)
     for award in award_dict:
         filtered_tweets = award_tweets(table,award,presenter_keywords)
-        #if 'performance' in award_dict[award]:
-        presenter_tweets = " ".join(filtered_tweets) #merge to one string
-        presenter_tweets = re.sub(r'\b%s\b' % 'GoldenGlobes|Golden Globes|Motion|Picture|Performance', '', presenter_tweets) #Remove the term Golden Globes
-        presenter_names = extract_people(presenter_tweets)
-        print(presenter_names)
-    #return presenters
+        #print(award)
+        #print(filtered_tweets)
+        presenter_tweets = " ".join(filtered_tweets)
+        presenter_tweets = re.sub(r'\b%s\b' % 'GoldenGlobes|Golden Globes|Motion|Picture|Performance|Best', '', presenter_tweets)
+        extracted_names = extract_people(presenter_tweets)
+        presenter_names_ngrams_counter = Counter(extracted_names)
+        top_bigrams = presenter_names_ngrams_counter.most_common(2)
+        presenter_names = [b[0] for b in top_bigrams]
+        #print(presenter_names)
+        presenters.append(presenter_names)
+    return presenters
+
+
 #https://tim.mcnamara.nz/post/2650550090/extracting-names-with-6-lines-of-python-code
 def extract_people(text):
     names = []
