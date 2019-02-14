@@ -41,10 +41,6 @@ def get_awards(year):
     if year == '2013':
         table = table2013
 
-#    elif year == '2015':
-#      table = table2015
-
-    #link common words together
     filtered_awards = table.loc[(table['text'].str.contains(helper_regex, regex=True))]['text']
 
     for t_id, text in filtered_awards.iteritems():
