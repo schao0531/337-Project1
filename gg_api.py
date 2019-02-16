@@ -239,7 +239,6 @@ def get_presenters(year):
 
     for award in award_dict:
         filtered_tweets = award_tweets(table,award,presenter_keywords)
-
         presenter_tweets = " ".join(filtered_tweets)
         presenter_tweets = re.sub(r'\b%s\b' % 'GoldenGlobes|Golden Globes|Motion|Picture|Performance|Best', '', presenter_tweets)
         extracted_names = extract_people(presenter_tweets)
@@ -302,7 +301,6 @@ def pre_ceremony(year):
         plain text file. It is the first thing the TA will run when grading.
         Do NOT change the name of this function or what it returns.'''
 
-    # Your code here
     data = []
     if year == "2013":
       with open('gg2013.json') as f:
@@ -339,6 +337,7 @@ def pre_ceremony(year):
 
     global award_dict
     award_dict = award_dictionary()
+
     return
 
 def main():
@@ -353,7 +352,7 @@ def main():
         year = input("Which year would you like to know about? ")
         year = year.strip()
         if year == "2013" or year == "2015" or year == "2018" or year == "2019":
-            pre_ceremony(year)
+            #pre_ceremony(year)
             print("What information would you like to know? ")
             print ("\n1. Hosts\n2. Awards\n3. Nominees\n4. Winners\n5. Presenters\n6. Best Dressed\n7. Worst Dressed\n8. Red Carpet - Most Discussed\n")
             user_input = input("Choose an option: ")
@@ -404,6 +403,8 @@ def main():
         else:
             print("Information about that year is not available. Please try again.")
             continue
+
+    return
 
 if __name__ == '__main__':
     main()
