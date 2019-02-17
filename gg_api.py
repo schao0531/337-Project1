@@ -177,35 +177,36 @@ def award_tweets(table,award,keywords):
     return win_candidates
 
 def fill_res_dict(year):
+    print("saving year results in a json format...")
     hosts = get_hosts(year)
     awards = get_awards(year)
-    #nominees = get_nominees(year)
-    #winners = get_winners(year)
+    nominees = get_nominees(year)
+    winners = get_winner(year)
     presenters = get_presenters(year)
 
     res_dict = {}
     res_dict["hosts"] = hosts
 
-    res_dict["award_data"] = {}
-    for a in awards:
-        res_dict["award_data"][a] = {}
-
     i = 0
 
-    OFFICIAL_AWARDS = []
     if year == "2013":
         OFFICIAL_AWARDS = OFFICIAL_AWARDS_1315
     elif year == "2018":
         OFFICIAL_AWARDS = OFFICIAL_AWARDS_1819
 
-    for award in awards:
-        pdb.set_trace()
+    res_dict["award_data"] = {}
+    for award in OFFICIAL_AWARDS:
         res_dict["award_data"][award] = {}
-        #res_dict["award_data"][award]["presenters"] =
+        res_dict["award_data"][award]["parsed_name"] = awards[i]
+        res_dict["award_data"][award]["nominees"] = nominees[award]
+        res_dict["award_data"][award]["presenters"] = presenters[award]
+        res_dict["award_data"][award]["winner"] = winners[award]
+        i += 1
+
+    with open('gg%s_studentanswers.json' % year, 'w') as fp:
+        json.dump(res_dict, fp)
 
 def get_hosts(year):
-
-
     '''Hosts is a list of one or more strings. Do NOT change the name
     of this function or what it returns.'''
 
@@ -442,6 +443,7 @@ def main():
         year = year.strip()
         if year == "2013" or year == "2015" or year == "2018" or year == "2019":
             inner_loop = 1
+            pre_ceremony(year)
             while (inner_loop == 1):
                 print("What information would you like to know? ")
                 print ("\n1. Hosts\n2. Awards\n3. Nominees\n4. Winners\n5. Presenters\n6. Best Dressed\n7. Worst Dressed\n8. Red Carpet - Most Discussed\n")
@@ -490,10 +492,11 @@ def main():
             print("Information about that year is not available. Please try again.")
             continue
 
-        cont = input("Finish program? y/n: ")
+        cont = input("Finish program and save output as json format? y/n: ")
         if cont.lower() == 'n':
             continue
         elif cont.lower() == 'y':
+            fill_res_dict(year)
             print("Program finished.")
             outer_loop = -1
             break
@@ -503,5 +506,4 @@ def main():
     return
 
 if __name__ == '__main__':
-    #fill_res_dict("2013")
     main()
