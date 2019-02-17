@@ -179,7 +179,6 @@ def get_winner(year):
     '''Winners is a dictionary with the hard coded award
         names as keys, and each entry containing a single string.
         Do NOT change the name of this function or what it returns.'''
-    # Your code here
     table = table.loc[table['text'].str.contains('wins')][['text']]
     table['tagged_list'] = table['text'].map(lambda x: tokenize_and_tag(x))
     winners = {}
@@ -403,7 +402,7 @@ def main():
             inner_loop = 1
             pre_ceremony(year)
             while (inner_loop == 1):
-                print("What information would you like to know? ")
+                print("What information would you like to know? Type the option's number, eg '4' ")
                 print ("\n1. Hosts\n2. Awards\n3. Nominees\n4. Winners\n5. Presenters\n6. Best Dressed\n7. Worst Dressed\n8. Red Carpet - Most Discussed\n")
                 user_input = input("Choose an option: ")
                 user_input = user_input.strip()
@@ -418,7 +417,11 @@ def main():
                     print("\nNot implemented.")
 
                 elif user_input == "4":
-                    print("\nNot implemented.")
+                    print("\nGetting the winners for each award category...")
+                    winners = get_winner(year)
+                    for winner in winners:
+                        print(winner)
+                        print(winners[winner],'\n')
 
                 elif user_input == "5":
                     presenters = get_presenters(year)
