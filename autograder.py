@@ -147,7 +147,7 @@ def calc_score(result, answer):
     elif len_result == len_answer and len_intersection == len_answer:
         m = 1.0
     elif len_intersection == len_result:
-        # all results correspond to a correct answer, but some 
+        # all results correspond to a correct answer, but some
         # answers are missing
         m = 0.95
     elif len_intersection == len_answer:
@@ -166,6 +166,7 @@ def calc_score(result, answer):
 
 def score_structured(year, answers, info_type):
     # c_score is the completeness score
+
     spelling_score = 0
     c_score = 0
     results = getattr(gg_api, 'get_%s' % info_type)(year)
@@ -194,6 +195,7 @@ def score_structured(year, answers, info_type):
 
 
 def score_unstructured(year, answers, info_type):
+
     results = getattr(gg_api, 'get_%s' % info_type)(year)
     spelling_score, translation = calc_translation(results, answers[info_type])
     c_score = calc_score([translation[res] if res in translation else res for res in results], answers[info_type])
@@ -202,6 +204,7 @@ def score_unstructured(year, answers, info_type):
 
 
 def main(years, grading):
+
     types = ['spelling', 'completeness']
 
     scores = {y: {g: {t:0 for t in types} for g in grading} for y in years}
