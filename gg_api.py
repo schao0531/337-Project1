@@ -179,17 +179,17 @@ def get_winner(year):
     '''Winners is a dictionary with the hard coded award
         names as keys, and each entry containing a single string.
         Do NOT change the name of this function or what it returns.'''
-    table = table.loc[table['text'].str.contains('wins')][['text']]
-    table['tagged_list'] = table['text'].map(lambda x: tokenize_and_tag(x))
+    global table
+    
+    winner_table = table.loc[table['text'].str.contains('wins')][['text']]
+    winner_table['tagged_list'] = winner_table['text'].map(lambda x: tokenize_and_tag(x))
     winners = {}
     for award in award_dict:
         candidate_names = []
-        table['relevance_score'] = table['text'].map(lambda x: relevance_score(x, award))
-        target_score = table['relevance_score'].max()
+        winner_table['relevance_score'] = winner_table['text'].map(lambda x: relevance_score(x, award))
+        target_score = winner_table['relevance_score'].max()
         while candidate_names == []:
-            #            print(award)
-            candidate_table = table.loc[table['relevance_score'] == target_score]
-            #            print(len(candidate_table['text']))
+            candidate_table = winner_table.loc[winner_table['relevance_score'] == target_score]
             for col, row in candidate_table.iterrows():
                 if 'performance' in award or 'director' in award or 'artist' in award:
                     names = grab_human_winners(row['tagged_list'])
