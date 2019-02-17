@@ -1,10 +1,10 @@
 import pandas as pd
 import json
 import nltk
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
-nltk.download('maxent_ne_chunker')
-nltk.download('words')
+nltk.download('punkt', quiet=True)
+nltk.download('averaged_perceptron_tagger', quiet=True)
+nltk.download('maxent_ne_chunker', quiet=True)
+nltk.download('words', quiet=True)
 from collections import Counter
 from nltk import ngrams
 from nltk.collocations import *
@@ -16,10 +16,11 @@ import sys
 import warnings
 warnings.filterwarnings("ignore", 'This pattern has match groups')
 
-OFFICIAL_AWARDS = ['cecil b. demille award', 'best motion picture - drama', 'best performance by an actress in a motion picture - drama', 'best performance by an actor in a motion picture - drama', 'best motion picture - comedy or musical', 'best performance by an actress in a motion picture - comedy or musical', 'best performance by an actor in a motion picture - comedy or musical', 'best animated feature film', 'best foreign language film', 'best performance by an actress in a supporting role in a motion picture', 'best performance by an actor in a supporting role in a motion picture', 'best director - motion picture', 'best screenplay - motion picture', 'best original score - motion picture', 'best original song - motion picture', 'best television series - drama', 'best performance by an actress in a television series - drama', 'best performance by an actor in a television series - drama', 'best television series - comedy or musical', 'best performance by an actress in a television series - comedy or musical', 'best performance by an actor in a television series - comedy or musical', 'best mini-series or motion picture made for television', 'best performance by an actress in a mini-series or motion picture made for television', 'best performance by an actor in a mini-series or motion picture made for television', 'best performance by an actress in a supporting role in a series, mini-series or motion picture made for television', 'best performance by an actor in a supporting role in a series, mini-series or motion picture made for television']
+OFFICIAL_AWARDS_1315 = ['cecil b. demille award', 'best motion picture - drama', 'best performance by an actress in a motion picture - drama', 'best performance by an actor in a motion picture - drama', 'best motion picture - comedy or musical', 'best performance by an actress in a motion picture - comedy or musical', 'best performance by an actor in a motion picture - comedy or musical', 'best animated feature film', 'best foreign language film', 'best performance by an actress in a supporting role in a motion picture', 'best performance by an actor in a supporting role in a motion picture', 'best director - motion picture', 'best screenplay - motion picture', 'best original score - motion picture', 'best original song - motion picture', 'best television series - drama', 'best performance by an actress in a television series - drama', 'best performance by an actor in a television series - drama', 'best television series - comedy or musical', 'best performance by an actress in a television series - comedy or musical', 'best performance by an actor in a television series - comedy or musical', 'best mini-series or motion picture made for television', 'best performance by an actress in a mini-series or motion picture made for television', 'best performance by an actor in a mini-series or motion picture made for television', 'best performance by an actress in a supporting role in a series, mini-series or motion picture made for television', 'best performance by an actor in a supporting role in a series, mini-series or motion picture made for television']
+OFFICIAL_AWARDS_1819 = ['best motion picture - drama', 'best motion picture - musical or comedy', 'best performance by an actress in a motion picture - drama', 'best performance by an actor in a motion picture - drama', 'best performance by an actress in a motion picture - musical or comedy', 'best performance by an actor in a motion picture - musical or comedy', 'best performance by an actress in a supporting role in any motion picture', 'best performance by an actor in a supporting role in any motion picture', 'best director - motion picture', 'best screenplay - motion picture', 'best motion picture - animated', 'best motion picture - foreign language', 'best original score - motion picture', 'best original song - motion picture', 'best television series - drama', 'best television series - musical or comedy', 'best television limited series or motion picture made for television', 'best performance by an actress in a limited series or a motion picture made for television', 'best performance by an actor in a limited series or a motion picture made for television', 'best performance by an actress in a television series - drama', 'best performance by an actor in a television series - drama', 'best performance by an actress in a television series - musical or comedy', 'best performance by an actor in a television series - musical or comedy', 'best performance by an actress in a supporting role in a series, limited series or motion picture made for television', 'best performance by an actor in a supporting role in a series, limited series or motion picture made for television', 'cecil b. demille award']
 
-def award_dictionary():
 
+def award_dictionary(year):
     stop_words = ['i',
                   'me',
                   'my',
@@ -150,6 +151,11 @@ def award_dictionary():
                   '-']
 
     empty_dict = {}
+    OFFICIAL_AWARDS = []
+    if year == "2013":
+        OFFICIAL_AWARDS = OFFICIAL_AWARDS_1315
+    elif year == "2018":
+        OFFICIAL_AWARDS = OFFICIAL_AWARDS_1819
     for award in OFFICIAL_AWARDS:
         if "television" in award:
             award_name = re.sub(r'(television\s+series)|(tv\s+series)', 'TV Series', award, flags=re.IGNORECASE)
@@ -166,8 +172,8 @@ def keyword_present(tweet,keywords):
 def award_tweets(table,award,keywords):
 
     relevant_tweets = [tweet for tweet in table['text'] if keyword_present(tweet,keywords)]
-    high_score = max([(sum([1 for word in award_dict[award] if word in tweet.lower()])) for tweet in win_tweets])
-    win_candidates = [tweet for tweet in win_tweets if sum([1 for word in award_dict[award] if word in tweet.lower()]) == high_score]
+    high_score = max([(sum([1 for word in award_dict[award] if word in tweet.lower()])) for tweet in relevant_tweets])
+    win_candidates = [tweet for tweet in relevant_tweets if sum([1 for word in award_dict[award] if word in tweet.lower()]) == high_score]
     return win_candidates
 
 def get_hosts(year):
@@ -260,10 +266,11 @@ def get_redcarpet(year):
     return most_discussed
 
 def get_best_dressed(year):
-    filtered_best_dress = table.loc[(table['text'].str.contains("bestdressed|best dressed|Best Dressed", regex=True))]['text']
+
+    filtered_best_dress = table.loc[(table['text'].str.contains("gorgeous|beautiful|amazing dress|best dressed|bestdressed|great outfit|looks great", regex=True))]['text']
 
     best_dress_tweets = " ".join(filtered_best_dress) #merge to one string
-    best_dress_tweets = re.sub(r'\b%s\b' % 'Golden Globes|Best Dressed|Photo|Photos|Best|Dress|Fashion', '', best_dress_tweets)
+    best_dress_tweets = re.sub(r'\b%s\b' % 'Golden Globes|Best Dressed|Photo|Photos|Best|Dress|Fashion|The|This|Hollywood', '', best_dress_tweets)
     best_names = extract_people(best_dress_tweets)
 
     best_ngram_counts = Counter(best_names)
@@ -273,9 +280,9 @@ def get_best_dressed(year):
 
 def get_worst_dressed(year):
 
-    filtered_worst_dress = table.loc[(table['text'].str.contains("worstdressed|worst dressed|Worst Dressed", regex=True))]['text']
+    filtered_worst_dress = table.loc[(table['text'].str.contains("worstdressed|worst dressed|worst outfit|bad fashion|worst attire|bad outfit|worst outfit", regex=True))]['text']
     worst_dress_tweets = " ".join(filtered_worst_dress) #merge to one string
-    worst_dress_tweets = re.sub(r'\b%s\b' % 'Golden Globes|Worst Dressed|Photo|Photos|Worst|Dress|Fashion', '', worst_dress_tweets)
+    worst_dress_tweets = re.sub(r'\b%s\b' % 'Golden Globes|Worst Dressed|Photo|Photos|Worst|Dress|Fashion|The|This|Hollywood', '', worst_dress_tweets)
     worst_names = extract_people(worst_dress_tweets)
 
     worst_ngram_counts = Counter(worst_names) #Create list of bigrams
@@ -301,6 +308,7 @@ def pre_ceremony(year):
         plain text file. It is the first thing the TA will run when grading.
         Do NOT change the name of this function or what it returns.'''
 
+    print("Reading in data...")
     data = []
     if year == "2013":
       with open('gg2013.json') as f:
@@ -336,7 +344,11 @@ def pre_ceremony(year):
     table.index.rename('id',inplace=True)
 
     global award_dict
-    award_dict = award_dictionary()
+    award_dict = []
+    if year == "2013" or year == "2015":
+        award_dict = award_dictionary("2013")
+    elif year == "2018" or year == "2019":
+        award_dict = award_dictionary("2018")
 
     return
 
@@ -347,61 +359,75 @@ def main():
     run when grading. Do NOT change the name of this function or
     what it returns.'''
 
-    loop = 1
-    while (loop == 1):
+    outer_loop = 1
+    while (outer_loop == 1):
         year = input("Which year would you like to know about? ")
         year = year.strip()
         if year == "2013" or year == "2015" or year == "2018" or year == "2019":
-            #pre_ceremony(year)
-            print("What information would you like to know? ")
-            print ("\n1. Hosts\n2. Awards\n3. Nominees\n4. Winners\n5. Presenters\n6. Best Dressed\n7. Worst Dressed\n8. Red Carpet - Most Discussed\n")
-            user_input = input("Choose an option: ")
-            user_input = user_input.strip()
+            pre_ceremony(year)
+            inner_loop = 1
+            while (inner_loop == 1):
+                print("What information would you like to know? ")
+                print ("\n1. Hosts\n2. Awards\n3. Nominees\n4. Winners\n5. Presenters\n6. Best Dressed\n7. Worst Dressed\n8. Red Carpet - Most Discussed\n")
+                user_input = input("Choose an option: ")
+                user_input = user_input.strip()
 
-            if user_input == "1":
-                print("\nGetting the ceremony hosts...")
-                print('\n'.join(get_hosts(year)))
+                if user_input == "1":
+                    print("\nGetting the ceremony hosts...")
+                    print('\n'.join(get_hosts(year)) + "\n")
 
-            elif user_input == "2":
-                print("\nGetting the award categories...")
-                print('\n'.join(get_awards(year)))
+                elif user_input == "2":
+                    print("\nGetting the award categories...")
+                    print('\n'.join(get_awards(year)) + "\n")
 
-            elif user_input == "3":
-                print("\nGetting the nominees for each award category...")
+                elif user_input == "3":
+                    print("\nGetting the nominees for each award category...")
 
-            elif user_input == "4":
-                print("\nGetting the winners for each award category...")
+                elif user_input == "4":
+                    print("\nGetting the winners for each award category...")
 
-            elif user_input == "5":
-                print("\nGetting the presenters for each award category...")
-                presenters = get_presenters(year)
-                for a in presenters:
-                    print(a + " : \n" + '\n'.join(presenters[a]))
+                elif user_input == "5":
+                    print("\nGetting the presenters for each award category...")
+                    presenters = get_presenters(year)
+                    for a in presenters:
+                        print(a + " : \n" + '\n'.join(presenters[a]) + "\n")
 
-            elif user_input == "6":
-                print("\nGetting the top five best dressed names...")
-                print('\n'.join(get_best_dressed(year)))
+                elif user_input == "6":
+                    print("\nGetting the top five best dressed names...")
+                    print('\n'.join(get_best_dressed(year)) + "\n")
 
-            elif user_input == "7":
-                print("\nGetting the top five worst dressed names...")
-                print('\n'.join(get_worst_dressed(year)))
+                elif user_input == "7":
+                    print("\nGetting the top five worst dressed names...")
+                    print('\n'.join(get_worst_dressed(year)) + "\n")
 
-            elif user_input == "8":
-                print("\nGetting the top five most discussed people from the red carpet...")
-                print('\n'.join(get_redcarpet(year)))
+                elif user_input == "8":
+                    print("\nGetting the top five most discussed people from the red carpet...")
+                    print('\n'.join(get_redcarpet(year)) + "\n")
 
-            else:
-                print("Invalid choice.")
+                else:
+                    print("Invalid choice.")
 
-            cont = input("Would you like to continue? y/n: ")
-            if cont.lower() == 'y':
-                continue
-            if cont.lower() == 'n':
-                print("Program finished.")
-                loop = -1
-                break
+                cont = input("Would you like to continue with this current year? y/n: ")
+                if cont.lower() == 'y':
+                    continue
+                elif cont.lower() == 'n':
+                    print("Exiting out of current year.")
+                    inner_loop = -1
+                    break
+                else:
+                    continue
         else:
             print("Information about that year is not available. Please try again.")
+            continue
+
+        cont = input("Finish program? y/n: ")
+        if cont.lower() == 'n':
+            continue
+        elif cont.lower() == 'y':
+            print("Program finished.")
+            outer_loop = -1
+            break
+        else:
             continue
 
     return
