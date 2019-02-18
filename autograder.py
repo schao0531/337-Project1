@@ -11,7 +11,6 @@ from collections import Counter
 from nltk.metrics import edit_distance
 
 import gg_api
-
 global toMovie
 toMovie = {'johann johannsson': 'the theory of everything', 'alexandre desplat': 'the imitation game', 'trent reznor and atticus ross': 'gone girl', 'antonio sanchez': 'birdman', 'hans zimmer': 'interstellar', 'glory': 'selma', 'big eyes': 'big eyes', 'mercy is': 'noah', 'opportunity': 'annie', 'yellow flicker beat': 'the hunger games mockingjay part 1', 'alejandro gonzalez inarritu': 'birdman', 'wes anderson': 'the grand budapest hotel', 'gillian flynn': 'gone girl', 'richard linklater': 'boyhood', 'graham moore': 'the imitation game'}
 
@@ -204,7 +203,6 @@ def score_unstructured(year, answers, info_type):
 
 
 def main(years, grading):
-
     types = ['spelling', 'completeness']
 
     scores = {y: {g: {t:0 for t in types} for g in grading} for y in years}

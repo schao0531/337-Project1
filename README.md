@@ -11,5 +11,5 @@
 
 ## To Run
 - Make sure gg2013.json, gg2015.json, gg2018.json, or gg2019.json are in the project folder
-- Run `$ python3 gg_api.py`
+- Run `$ python3 gg_api.py` or `$python3 autograder.py`
 - JSON formatted answers are written to the gg_studentsanswers.json file
