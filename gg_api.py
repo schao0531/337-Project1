@@ -150,11 +150,11 @@ def get_winner(year):
     global table
     if table is None:
         pre_ceremony(year)
-
     print("\nGetting the winners for each award category...")
     winner_table = table.loc[table['text'].str.contains('wins')][['text']]
     winner_table['tagged_list'] = winner_table['text'].map(lambda x: tokenize_and_tag(x))
     winners = {}
+    global award_dict
     for award in award_dict:
         candidate_names = []
         winner_table['relevance_score'] = winner_table['text'].map(lambda x: relevance_score(x, award))
