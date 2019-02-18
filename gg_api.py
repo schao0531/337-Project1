@@ -21,36 +21,6 @@ table = None
 award_dict = None
 
 
-def fill_res_dict(year):
-    print("saving year results in a json format...")
-    hosts = get_hosts(year)
-    awards = get_awards(year)
-    nominees = get_nominees(year)
-    winners = get_winner(year)
-    presenters = get_presenters(year)
-
-    res_dict = {}
-    res_dict["hosts"] = hosts
-
-    i = 0
-
-    if year == "2013":
-        OFFICIAL_AWARDS = OFFICIAL_AWARDS_1315
-    elif year == "2018":
-        OFFICIAL_AWARDS = OFFICIAL_AWARDS_1819
-
-    res_dict["award_data"] = {}
-    for award in OFFICIAL_AWARDS:
-        res_dict["award_data"][award] = {}
-        res_dict["award_data"][award]["parsed_name"] = awards[i]
-        res_dict["award_data"][award]["nominees"] = nominees[award]
-        res_dict["award_data"][award]["presenters"] = presenters[award]
-        res_dict["award_data"][award]["winner"] = winners[award]
-        i += 1
-
-    with open('gg%s_studentanswers.json' % year, 'w') as fp:
-        json.dump(res_dict, fp)
-
 ########################################################################################################
 # HOST FUNCTIONS
 ########################################################################################################
@@ -333,6 +303,7 @@ def award_dictionary(year):
         Dict[award] = filtered_sentence.split(' ')
     return Dict
 
+
 def pre_ceremony(year):
     '''This function loads/fetches/processes any data your program
         will use, and stores that data in your DB or in a json, csv, or
@@ -382,6 +353,40 @@ def pre_ceremony(year):
         award_dict = award_dictionary("2018")
 
     return
+
+########################################################################################################
+# OUTPUT FUNCTION
+########################################################################################################
+
+def fill_res_dict(year):
+    print("saving year results in a json format...")
+    hosts = get_hosts(year)
+    awards = get_awards(year)
+    nominees = get_nominees(year)
+    winners = get_winner(year)
+    presenters = get_presenters(year)
+    
+    res_dict = {}
+    res_dict["hosts"] = hosts
+    
+    i = 0
+    
+    if year == "2013":
+        OFFICIAL_AWARDS = OFFICIAL_AWARDS_1315
+    elif year == "2018":
+        OFFICIAL_AWARDS = OFFICIAL_AWARDS_1819
+    
+    res_dict["award_data"] = {}
+    for award in OFFICIAL_AWARDS:
+        res_dict["award_data"][award] = {}
+        res_dict["award_data"][award]["parsed_name"] = awards[i]
+        res_dict["award_data"][award]["nominees"] = nominees[award]
+        res_dict["award_data"][award]["presenters"] = presenters[award]
+        res_dict["award_data"][award]["winner"] = winners[award]
+        i += 1
+    
+    with open('gg%s_studentanswers.json' % year, 'w') as fp:
+        json.dump(res_dict, fp)
 
 ########################################################################################################
 # MAIN
