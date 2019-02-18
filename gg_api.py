@@ -30,8 +30,7 @@ def get_hosts(year):
         of this function or what it returns.'''
 
     global table
-    if table is None:
-        pre_ceremony(year)
+    pre_ceremony(year)
 
     print("\nGetting the ceremony hosts...")
     filtered_tweets = table.loc[(table['text'].str.contains('host|Host', regex=True)) & ~(table['text'].str.contains('next|Next', regex=True)) ]['text'] #contains word host, does not contain next
@@ -49,9 +48,9 @@ def get_hosts(year):
 def get_awards(year):
     '''Awards is a list of strings. Do NOT change the name
         of this function or what it returns.'''
-    global table
-    if table is None:
-        pre_ceremony(year)
+    # global table
+    # if table is None:
+    #     pre_ceremony(year)
 
     print("\nGetting the award categories...")
     award_words = ['Motion', 'motion', 'Picture', 'picture', 'Drama', 'drama', 'Performance', 'performance', 'Actress', 'actress', 'Actor', 'actor','Comedy', 'comedy', 'Musical', 'musical', 'Animated', 'animated', 'Feature', 'feature', 'Film', 'film', 'Foreign', 'foreign', 'Language', 'language', 'Supporting', 'supporting', 'Role', 'role', 'Director', 'director', 'Screenplay', 'screenplay', 'Original', 'orginal', 'Score', 'score', 'Song', 'song', 'Television', 'television', 'Series', 'series', 'Mini-series',  'mini-series', 'mini', 'Mini']
@@ -136,10 +135,10 @@ def get_nominees(year):
     '''Nominees is a dictionary with the hard coded award
         names as keys, and each entry a list of strings. Do NOT change
         the name of this function or what it returns.'''
-    global table
-    if table is None:
-        pre_ceremony(year)
-    
+    # global table
+    # if table is None:
+    #     pre_ceremony(year)
+
     print("\nGetting the nominees for each award category...")
     global award_dict
     nominee_table = table.loc[(table['text'].str.contains('nomin')) & ~(table['text'].str.contains('win'))][['text']]
@@ -222,9 +221,9 @@ def get_winner(year):
     '''Winners is a dictionary with the hard coded award
         names as keys, and each entry containing a single string.
         Do NOT change the name of this function or what it returns.'''
-    global table
-    if table is None:
-        pre_ceremony(year)
+    # global table
+    # if table is None:
+    #     pre_ceremony(year)
     print("\nGetting the winners for each award category...")
     winner_table = table.loc[table['text'].str.contains('wins')][['text']]
     winner_table['tagged_list'] = winner_table['text'].map(lambda x: tokenize_and_tag(x))
@@ -284,10 +283,6 @@ def get_presenters(year):
     presenter_keywords = ['present']
     presenters = {}
 
-    global table
-    if table is None:
-        pre_ceremony(year)
-
     print("\nGetting the presenters for each award category...")
     global award_dict
     for award in award_dict:
@@ -307,9 +302,9 @@ def get_presenters(year):
 ########################################################################################################
 
 def get_redcarpet(year):
-    global table
-    if table is None:
-        pre_ceremony(year)
+    # global table
+    # if table is None:
+    #     pre_ceremony(year)
 
     print("\nGetting the top five most discussed people from the red carpet...")
     filtered_tweets = table.loc[(table['text'].str.contains("redcarpet|red carpet|Red Carpet", regex=True))]['text']
@@ -322,9 +317,9 @@ def get_redcarpet(year):
     return most_discussed
 
 def get_best_dressed(year):
-    global table
-    if table is None:
-        pre_ceremony(year)
+    # global table
+    # if table is None:
+    #     pre_ceremony(year)
 
     print("\nGetting the top five best dressed names...")
     filtered_best_dress = table.loc[(table['text'].str.contains("gorgeous|beautiful|amazing dress|best dressed|bestdressed|great outfit|looks great", regex=True))]['text']
@@ -339,9 +334,9 @@ def get_best_dressed(year):
     return best_dressed_names
 
 def get_worst_dressed(year):
-    global table
-    if table is None:
-        pre_ceremony(year)
+    # global table
+    # if table is None:
+    #     pre_ceremony(year)
 
     print("\nGetting the top five worst dressed names...")
     filtered_worst_dress = table.loc[(table['text'].str.contains("worstdressed|worst dressed|worst outfit|bad fashion|worst attire|bad outfit|worst outfit", regex=True))]['text']
@@ -440,17 +435,18 @@ def fill_res_dict(year):
     nominees = get_nominees(year)
     winners = get_winner(year)
     presenters = get_presenters(year)
-    
+
     res_dict = {}
     res_dict["hosts"] = hosts
-    
+
     i = 0
-    
-    if year == "2013":
+
+    OFFICIAL_AWARDS = []
+    if year == "2013" or year == "2015":
         OFFICIAL_AWARDS = OFFICIAL_AWARDS_1315
-    elif year == "2018":
+    elif year == "2018" or year == "2019":
         OFFICIAL_AWARDS = OFFICIAL_AWARDS_1819
-    
+
     res_dict["award_data"] = {}
     for award in OFFICIAL_AWARDS:
         res_dict["award_data"][award] = {}
@@ -459,7 +455,7 @@ def fill_res_dict(year):
         res_dict["award_data"][award]["presenters"] = presenters[award]
         res_dict["award_data"][award]["winner"] = winners[award]
         i += 1
-    
+
     with open('gg%s_studentanswers.json' % year, 'w') as fp:
         json.dump(res_dict, fp)
 
@@ -495,7 +491,10 @@ def main():
                     print('\n'.join(get_awards(year)) + "\n")
 
                 elif user_input == "3":
-                    print("\nNot implemented.")
+                    nominees = get_nominees(year)
+                    for n in nominees:
+                        print(n)
+                        print(nominees[n],'\n')
 
                 elif user_input == "4":
                     winners = get_winner(year)
@@ -533,11 +532,13 @@ def main():
             print("Information about that year is not available. Please try again.")
             continue
 
-        cont = input("Finish program and save output as json format? y/n: ")
+        cont = input("Exit program? y/n: ")
         if cont.lower() == 'n':
             continue
         elif cont.lower() == 'y':
-            fill_res_dict(year)
+            save_json = input("Save output to json format? y/n: ")
+            if save_json.lower() == 'y':
+                fill_res_dict(year)
             print("Program finished.")
             outer_loop = -1
             break
