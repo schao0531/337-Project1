@@ -81,6 +81,57 @@ def get_awards(year):
 # GET NOMINEES FUNCTIONS
 ########################################################################################################
 
+def grab_human_nominees(tagged_list):
+    names = []
+    for i in range(len(tagged_list)-2):
+        first = tagged_list[i]
+        second = tagged_list[i+1]
+        third = tagged_list[i+2]
+        if ('nomin' in first[0] or 'snub' in first[0]) and second[1] == 'NNP' and third[1] == 'NNP':
+            names.append(second[0]+' '+third[0])
+    return names
+
+def grab_work_nominees(string):
+    words = string.split('"')
+    if len(words) == 1:
+        return []
+    elif len(words[1]) < 15:
+        return [words[1]]
+    else:
+        return []
+
+def grab_nonhuman_nominees(string):
+    names = []
+    words = list(filter(None, string.split(' ')))
+    for i in range(len(words)-3):
+        first = words[i]
+        second = words[i+1]
+        third = words[i+2]
+        fourth = words[i+3]
+        if ('nomin' in first or 'snub' in first) and second[0].isupper() and third[0].isupper() and fourth[0].isupper():
+            names.append(second+' '+third+' '+fourth)
+        elif ('nomin' in second or 'snub' in second) and third[0].isupper() and fourth[0].isupper():
+            names.append(third+' '+fourth)
+        elif ('nomin' in third or 'snub' in third) and fourth[0].isupper():
+            names.append(fourth)
+    return names
+
+def relevance_score(string,award):
+    return sum([1 for word in award_dict[award] if word in string.lower()])
+
+def tokenize_and_tag(string):
+    text = nltk.word_tokenize(string)
+    tagged_list = nltk.pos_tag(text)
+    return tagged_list
+
+def filter1(string):
+    string = string.replace("“", "").replace("@", "").replace("CNNshowbiz", "").replace("RT", "")
+    stopwords = ['golden','rt','academy','award','awards','oscar']
+    querywords = string.split()
+    resultwords  = [word for word in querywords if word.lower() not in stopwords]
+    result = ' '.join(resultwords)
+    return result
+
 def get_nominees(year):
     '''Nominees is a dictionary with the hard coded award
         names as keys, and each entry a list of strings. Do NOT change
@@ -88,12 +139,36 @@ def get_nominees(year):
     global table
     if table is None:
         pre_ceremony(year)
-
+    
     print("\nGetting the nominees for each award category...")
     global award_dict
+    nominee_table = table.loc[(table['text'].str.contains('nomin')) & ~(table['text'].str.contains('win'))][['text']]
+    nominee_table['text'] = nominee_table['text'].map(lambda x: filter1(x))
+    nominee_table['tagged_list'] = nominee_table['text'].map(lambda x: tokenize_and_tag(x))
     nominees = {}
-    for a in award_dict:
-        nominees[a] = {}
+    for award in award_dict:
+        candidate_names = []
+        nominee_table['relevance_score'] = nominee_table['text'].map(lambda x: relevance_score(x, award))
+        target_score = nominee_table['relevance_score'].max()
+        while candidate_names == []:
+            candidate_table = nominee_table.loc[nominee_table['relevance_score'] == target_score-1]
+            #             if award == 'best performance by an actor in a motion picture - comedy or musical':
+            #                 print(candidate_table['text'])
+            for col, row in candidate_table.iterrows():
+                if 'perform' in award or 'direct' in award or 'artist' in award:
+                    names = grab_human_nominees(row['tagged_list'])
+                elif 'series' in award or 'film' in award or 'score' in award or 'song' in award or 'album' in award:
+                    names = grab_work_nominees(row['text'])
+                else:
+                    names = grab_nonhuman_nominees(row['text'])
+                for name in names:
+                    candidate_names += names
+            if candidate_names == []:
+                target_score = target_score - 1
+            else:
+                top_candidate_tuples = Counter(candidate_names).most_common(5)
+                top_candidates = [candidate[0] for candidate in top_candidate_tuples]
+        nominees[award] = top_candidates
     return nominees
 
 ########################################################################################################
