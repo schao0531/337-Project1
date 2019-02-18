@@ -416,7 +416,10 @@ def main():
                     print('\n'.join(get_awards(year)) + "\n")
 
                 elif user_input == "3":
-                    print("\nNot implemented.")
+                    nominees = get_nominees(year)
+                    for n in nominees:
+                        print(n)
+                        print(nominees[n],'\n')
 
                 elif user_input == "4":
                     winners = get_winner(year)
